@@ -28,36 +28,46 @@ after_initialize do
   ].each { |path| load File.expand_path(path + ".rb", __FILE__) }
 
   # Serialize location into topic_view (single topic page)
-  add_to_serializer(:topic_view, :geo_location) do
-    loc = DiscourseGeoLocation::TopicLocation
-      .includes(:country, :region, :city)
-      .find_by(topic_id: object.topic.id)
-    if loc
-      {
-        country_id: loc.country_id,
-        country_name: loc.country.name,
-        region_id: loc.region_id,
-        region_name: loc.region.name,
-        city_id: loc.city_id,
-        city_name: loc.city.name,
-      }
+  add_to_serializer(:topic_view, :geo_location, respect_plugin_enabled: true) do
+    begin
+      loc = DiscourseGeoLocation::TopicLocation
+        .includes(:country, :region, :city)
+        .find_by(topic_id: object.topic.id)
+      if loc
+        {
+          country_id: loc.country_id,
+          country_name: loc.country&.name,
+          region_id: loc.region_id,
+          region_name: loc.region&.name,
+          city_id: loc.city_id,
+          city_name: loc.city&.name,
+        }
+      end
+    rescue => e
+      Rails.logger.warn("[DiscourseGeoLocation] Serializer error: #{e.message}")
+      nil
     end
   end
 
   # Serialize location into topic_list_item (topic list page)
-  add_to_serializer(:topic_list_item, :geo_location) do
-    loc = DiscourseGeoLocation::TopicLocation
-      .includes(:country, :region, :city)
-      .find_by(topic_id: object.id)
-    if loc
-      {
-        country_id: loc.country_id,
-        country_name: loc.country.name,
-        region_id: loc.region_id,
-        region_name: loc.region.name,
-        city_id: loc.city_id,
-        city_name: loc.city.name,
-      }
+  add_to_serializer(:topic_list_item, :geo_location, respect_plugin_enabled: true) do
+    begin
+      loc = DiscourseGeoLocation::TopicLocation
+        .includes(:country, :region, :city)
+        .find_by(topic_id: object.id)
+      if loc
+        {
+          country_id: loc.country_id,
+          country_name: loc.country&.name,
+          region_id: loc.region_id,
+          region_name: loc.region&.name,
+          city_id: loc.city_id,
+          city_name: loc.city&.name,
+        }
+      end
+    rescue => e
+      Rails.logger.warn("[DiscourseGeoLocation] Serializer error: #{e.message}")
+      nil
     end
   end
 
@@ -86,24 +96,19 @@ after_initialize do
     end
   end
 
-  # Pass geo-location filter params through to TopicQuery
-  add_to_class(:list_controller, :build_topic_list_options) do
-    options = super()
-    options[:country_id] = params[:country_id] if params[:country_id].present?
-    options[:region_id] = params[:region_id] if params[:region_id].present?
-    options[:city_id] = params[:city_id] if params[:city_id].present?
-    options
-  end
-
   # Save location on topic create
   DiscourseEvent.on(:topic_created) do |topic, opts, user|
     if opts[:geo_country_id].present? && opts[:geo_region_id].present? && opts[:geo_city_id].present?
-      DiscourseGeoLocation::TopicLocation.create!(
-        topic_id: topic.id,
-        country_id: opts[:geo_country_id],
-        region_id: opts[:geo_region_id],
-        city_id: opts[:geo_city_id],
-      )
+      begin
+        DiscourseGeoLocation::TopicLocation.create!(
+          topic_id: topic.id,
+          country_id: opts[:geo_country_id],
+          region_id: opts[:geo_region_id],
+          city_id: opts[:geo_city_id],
+        )
+      rescue => e
+        Rails.logger.warn("[DiscourseGeoLocation] Failed to save topic location: #{e.message}")
+      end
     end
   end
 end
