@@ -10,13 +10,19 @@ export default class ComposerGeoLocation extends Component {
     }
 
     get showLocationSelector() {
-        // Show for new topics (action === CREATE_TOPIC)
         const model = this.model;
         if (!model) {
             return false;
         }
-        // action 4 = CREATE_TOPIC, action 7 = EDIT
-        return model.action === 4 || model.action === 7;
+        // Discourse uses string action types
+        const act = model.get ? model.get("action") : model.action;
+        return (
+            act === "createTopic" ||
+            act === "edit" ||
+            act === "privateMessage" ||
+            // Always show if model exists and it's the first post
+            model.get?.("topicFirstPost")
+        );
     }
 
     get existingCountryId() {
@@ -34,11 +40,13 @@ export default class ComposerGeoLocation extends Component {
     @action
     onLocationChange(data) {
         this.locationData = data;
-        // Store on the composer model so it can be sent with topic creation
-        if (this.model) {
-            this.model.set("geo_country_id", data.countryId);
-            this.model.set("geo_region_id", data.regionId);
-            this.model.set("geo_city_id", data.cityId);
+        const model = this.model;
+        if (model) {
+            if (model.set) {
+                model.set("geo_country_id", data.countryId);
+                model.set("geo_region_id", data.regionId);
+                model.set("geo_city_id", data.cityId);
+            }
         }
     }
 }

@@ -3,6 +3,7 @@
 module ::DiscourseGeoLocation
   class LocationsController < ::ApplicationController
     requires_plugin DiscourseGeoLocation::PLUGIN_NAME
+    skip_before_action :check_xhr, only: [:countries, :regions, :cities]
 
     def countries
       countries = Country.order(:name).select(:id, :name)
