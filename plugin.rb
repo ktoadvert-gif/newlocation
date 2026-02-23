@@ -111,4 +111,33 @@ after_initialize do
       end
     end
   end
+
+  # ── Seed location data (idempotent) ──────────────────────────────────
+  unless Rails.env.test?
+    begin
+      if ActiveRecord::Base.connection.table_exists?("geo_countries")
+        # Ukraine
+        ua = DiscourseGeoLocation::Country.find_or_create_by!(name: "Ukraine")
+        kharkiv_obl = DiscourseGeoLocation::Region.find_or_create_by!(name: "Kharkiv Oblast", country_id: ua.id)
+        DiscourseGeoLocation::City.find_or_create_by!(name: "Kharkiv", region_id: kharkiv_obl.id)
+        DiscourseGeoLocation::City.find_or_create_by!(name: "Izium", region_id: kharkiv_obl.id)
+        kyiv_obl = DiscourseGeoLocation::Region.find_or_create_by!(name: "Kyiv Oblast", country_id: ua.id)
+        DiscourseGeoLocation::City.find_or_create_by!(name: "Kyiv", region_id: kyiv_obl.id)
+        DiscourseGeoLocation::City.find_or_create_by!(name: "Brovary", region_id: kyiv_obl.id)
+
+        # Poland
+        pl = DiscourseGeoLocation::Country.find_or_create_by!(name: "Poland")
+        masovian = DiscourseGeoLocation::Region.find_or_create_by!(name: "Masovian Voivodeship", country_id: pl.id)
+        DiscourseGeoLocation::City.find_or_create_by!(name: "Warsaw", region_id: masovian.id)
+        DiscourseGeoLocation::City.find_or_create_by!(name: "Radom", region_id: masovian.id)
+        lesser_pl = DiscourseGeoLocation::Region.find_or_create_by!(name: "Lesser Poland Voivodeship", country_id: pl.id)
+        DiscourseGeoLocation::City.find_or_create_by!(name: "Krakow", region_id: lesser_pl.id)
+        DiscourseGeoLocation::City.find_or_create_by!(name: "Tarnow", region_id: lesser_pl.id)
+
+        Rails.logger.info("[DiscourseGeoLocation] Seed data loaded: 2 countries, 4 regions, 8 cities.")
+      end
+    rescue => e
+      Rails.logger.warn("[DiscourseGeoLocation] Seed data error: #{e.message}")
+    end
+  end
 end
