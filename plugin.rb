@@ -71,35 +71,40 @@ after_initialize do
     end
   end
 
-  # Extend TopicQuery to support location filtering via query params
+  # Define association on Topic for easier joining
+  add_to_class(:topic, :geo_topic_location) do
+    DiscourseGeoLocation::TopicLocation.find_by(topic_id: self.id)
+  end
+
+  # Named module for cleaner prepending and better error messages
+  module ::DiscourseGeoLocation::ListControllerExtension
+    def build_topic_list_options
+      options = super
+      options[:geo_country_id] = params[:country_id] if params[:country_id].present?
+      options[:geo_region_id] = params[:region_id] if params[:region_id].present?
+      options[:geo_city_id] = params[:city_id] if params[:city_id].present?
+      options
+    end
+  end
+
+  # Extend TopicQuery to support location filtering
   reloadable_patch do
-    ListController.prepend(Module.new do
-      def build_topic_list_options
-        options = super
-        options[:country_id] = params[:country_id]
-        options[:region_id] = params[:region_id]
-        options[:city_id] = params[:city_id]
-        options
-      end
-    end)
+    ListController.prepend(::DiscourseGeoLocation::ListControllerExtension)
 
     TopicQuery.add_custom_filter(:geo_location) do |results, topic_query|
-      country_id = topic_query.options[:country_id]
-      region_id = topic_query.options[:region_id]
-      city_id = topic_query.options[:city_id]
+      c_id = topic_query.options[:geo_country_id]
+      r_id = topic_query.options[:geo_region_id]
+      i_id = topic_query.options[:geo_city_id]
 
-      if country_id.present?
-        results = results
-          .joins("INNER JOIN geo_topic_locations ON geo_topic_locations.topic_id = topics.id")
-          .where("geo_topic_locations.country_id = ?", country_id)
-
-        if region_id.present?
-          results = results.where("geo_topic_locations.region_id = ?", region_id)
+      if c_id.present?
+        # Only join if not already joined
+        unless results.to_sql.include?("geo_topic_locations")
+          results = results.joins("INNER JOIN geo_topic_locations ON geo_topic_locations.topic_id = topics.id")
         end
-
-        if city_id.present?
-          results = results.where("geo_topic_locations.city_id = ?", city_id)
-        end
+        
+        results = results.where("geo_topic_locations.country_id = ?", c_id.to_i)
+        results = results.where("geo_topic_locations.region_id = ?", r_id.to_i) if r_id.present?
+        results = results.where("geo_topic_locations.city_id = ?", i_id.to_i) if i_id.present?
       end
 
       results
