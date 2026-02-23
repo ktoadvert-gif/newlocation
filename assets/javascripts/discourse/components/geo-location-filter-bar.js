@@ -14,7 +14,29 @@ export default class GeoLocationFilterBar extends Component {
 
     constructor() {
         super(...arguments);
+        this._initializeFromUrl();
         this._loadCountries();
+    }
+
+    _initializeFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+        const countryId = params.get("country_id");
+        const regionId = params.get("region_id");
+        const cityId = params.get("city_id");
+
+        if (countryId) {
+            this.selectedCountryId = parseInt(countryId, 10);
+            this._loadRegions(this.selectedCountryId);
+        }
+
+        if (regionId) {
+            this.selectedRegionId = parseInt(regionId, 10);
+            this._loadCities(this.selectedRegionId);
+        }
+
+        if (cityId) {
+            this.selectedCityId = parseInt(cityId, 10);
+        }
     }
 
     async _loadCountries() {

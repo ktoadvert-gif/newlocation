@@ -73,6 +73,16 @@ after_initialize do
 
   # Extend TopicQuery to support location filtering via query params
   reloadable_patch do
+    ListController.prepend(Module.new do
+      def build_topic_list_options
+        options = super
+        options[:country_id] = params[:country_id]
+        options[:region_id] = params[:region_id]
+        options[:city_id] = params[:city_id]
+        options
+      end
+    end)
+
     TopicQuery.add_custom_filter(:geo_location) do |results, topic_query|
       country_id = topic_query.options[:country_id]
       region_id = topic_query.options[:region_id]
