@@ -71,44 +71,57 @@ after_initialize do
     end
   end
 
-  # Define association on Topic for easier joining
-  add_to_class(:topic, :geo_topic_location) do
-    DiscourseGeoLocation::TopicLocation.find_by(topic_id: self.id)
-  end
-
-  # Named module for cleaner prepending and better error messages
-  module ::DiscourseGeoLocation::ListControllerExtension
-    def build_topic_list_options
-      options = super
-      options[:geo_country_id] = params[:country_id] if params[:country_id].present?
-      options[:geo_region_id] = params[:region_id] if params[:region_id].present?
-      options[:geo_city_id] = params[:city_id] if params[:city_id].present?
-      options
-    end
-  end
-
   # Extend TopicQuery to support location filtering
   reloadable_patch do
-    ListController.prepend(::DiscourseGeoLocation::ListControllerExtension)
+    # Use class_eval for a more direct patch with a guard clause
+    unless ListController.respond_to?(:build_topic_list_options_geo_orig)
+      ListController.class_eval do
+        alias_method :build_topic_list_options_geo_orig, :build_topic_list_options
+        def build_topic_list_options
+          options = build_topic_list_options_geo_orig || {}
+          
+          # Map URL params to unique internal option keys
+          if params[:country_id].present?
+            options[:geo_country_id] = params[:country_id].to_i
+          end
+          if params[:region_id].present?
+            options[:geo_region_id] = params[:region_id].to_i
+          end
+          if params[:city_id].present?
+            options[:geo_city_id] = params[:city_id].to_i
+          end
+          
+          options
+        end
+      end
+    end
 
     TopicQuery.add_custom_filter(:geo_location) do |results, topic_query|
-      c_id = topic_query.options[:geo_country_id]
-      r_id = topic_query.options[:geo_region_id]
-      i_id = topic_query.options[:geo_city_id]
+      begin
+        c_id = topic_query.options[:geo_country_id]
+        r_id = topic_query.options[:geo_region_id]
+        i_id = topic_query.options[:geo_city_id]
 
-      if c_id.present?
-        # Only join if not already joined
-        unless results.to_sql.include?("geo_topic_locations")
-          results = results.joins("INNER JOIN geo_topic_locations ON geo_topic_locations.topic_id = topics.id")
+        if c_id.present? && c_id > 0
+          # Use a subquery approach - much safer than joins in TopicQuery
+          # as it avoids aliasing issues and duplicate join errors.
+          subquery = DiscourseGeoLocation::TopicLocation.where(country_id: c_id)
+          subquery = subquery.where(region_id: r_id) if r_id.present? && r_id > 0
+          subquery = subquery.where(city_id: i_id) if i_id.present? && i_id > 0
+          
+          results = results.where("topics.id IN (?)", subquery.select(:topic_id))
         end
-        
-        results = results.where("geo_topic_locations.country_id = ?", c_id.to_i)
-        results = results.where("geo_topic_locations.region_id = ?", r_id.to_i) if r_id.present?
-        results = results.where("geo_topic_locations.city_id = ?", i_id.to_i) if i_id.present?
+      rescue => e
+        Rails.logger.error("[DiscourseGeoLocation] Filter error: #{e.message}\n#{e.backtrace.first(5).join("\n")}")
       end
-
+      
       results
     end
+  end
+
+  # Define association on Topic for display convenience
+  add_to_class(:topic, :geo_topic_location) do
+    @geo_topic_location ||= DiscourseGeoLocation::TopicLocation.find_by(topic_id: self.id)
   end
 
   # Save location on topic create
