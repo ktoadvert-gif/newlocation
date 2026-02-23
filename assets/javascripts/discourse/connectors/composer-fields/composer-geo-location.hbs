@@ -1,0 +1,6 @@
+{{#if this.showLocationSelector}}
+<div class="composer-geo-location">
+    <GeoLocationSelector @countryId={{this.existingCountryId}} @regionId={{this.existingRegionId}}
+        @cityId={{this.existingCityId}} @onChange={{this.onLocationChange}} />
+</div>
+{{/if}}

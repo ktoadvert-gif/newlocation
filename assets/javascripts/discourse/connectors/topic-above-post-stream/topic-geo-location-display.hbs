@@ -1,0 +1,10 @@
+{{#if @outletArgs.model.geo_location}}
+<div class="topic-geo-location-display">
+    <span class="geo-location-icon">📍</span>
+    <span class="geo-location-text">
+        {{@outletArgs.model.geo_location.city_name}},
+        {{@outletArgs.model.geo_location.region_name}},
+        {{@outletArgs.model.geo_location.country_name}}
+    </span>
+</div>
+{{/if}}

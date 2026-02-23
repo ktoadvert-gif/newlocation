@@ -1,0 +1,73 @@
+// Geo-Location Plugin Styles
+// Match Discourse native design
+
+.composer-geo-location {
+    padding: 8px 0;
+    border-top: 1px solid var(--primary-low);
+    margin-top: 5px;
+}
+
+.geo-location-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: flex-end;
+
+    .geo-location-field {
+        display: flex;
+        flex-direction: column;
+        min-width: 150px;
+        flex: 1;
+
+        .geo-location-label {
+            font-size: var(--font-down-1);
+            color: var(--primary-medium);
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+    }
+}
+
+.geo-location-filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    padding: 10px 0;
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--primary-low);
+
+    .geo-filter-label {
+        font-weight: 600;
+        font-size: var(--font-down-1);
+        color: var(--primary-high);
+        margin-right: 4px;
+    }
+
+    .geo-filter-dropdown {
+        min-width: 140px;
+    }
+
+    .geo-clear-filter {
+        font-size: var(--font-down-1);
+    }
+}
+
+.topic-geo-location-display {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 0 10px;
+    font-size: var(--font-down-1);
+    color: var(--primary-medium);
+    border-bottom: 1px solid var(--primary-low);
+    margin-bottom: 10px;
+
+    .geo-location-icon {
+        font-size: var(--font-0);
+    }
+
+    .geo-location-text {
+        font-weight: 500;
+    }
+}

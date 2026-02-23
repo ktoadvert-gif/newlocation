@@ -1,0 +1,4 @@
+discourse_geo_location:
+  discourse_geo_location_enabled:
+    default: true
+    client: true

@@ -1,0 +1,22 @@
+<div class="geo-location-filter-bar">
+    <span class="geo-filter-label">{{i18n "geo_location.filter_topics"}}</span>
+
+    <ComboBox @content={{this.countryOptions}} @value={{this.selectedCountryId}} @onChange={{this.onCountryChange}}
+        @options={{hash none="geo_location.select_country" filterable=true}} class="geo-filter-dropdown" />
+
+    {{#if this.selectedCountryId}}
+    <ComboBox @content={{this.regionOptions}} @value={{this.selectedRegionId}} @onChange={{this.onRegionChange}}
+        @options={{hash none="geo_location.select_region" filterable=true}} class="geo-filter-dropdown" />
+    {{/if}}
+
+    {{#if this.selectedRegionId}}
+    <ComboBox @content={{this.cityOptions}} @value={{this.selectedCityId}} @onChange={{this.onCityChange}}
+        @options={{hash none="geo_location.select_city" filterable=true}} class="geo-filter-dropdown" />
+    {{/if}}
+
+    {{#if this.showClearButton}}
+    <button type="button" class="btn btn-default geo-clear-filter" {{on "click" this.clearFilter}}>
+        {{i18n "geo_location.clear_filter"}}
+    </button>
+    {{/if}}
+</div>

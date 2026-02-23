@@ -1,0 +1,5 @@
+en:
+  discourse_geo_location:
+    errors:
+      location_required: "A valid location (country, region, city) is required."
+      invalid_location: "The specified location is invalid."

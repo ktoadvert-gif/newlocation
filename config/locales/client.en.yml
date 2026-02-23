@@ -1,0 +1,22 @@
+en:
+  site_settings:
+    discourse_geo_location_enabled: "Enable the Geo-Location plugin for topics"
+  admin_js:
+    admin:
+      site_settings:
+        categories:
+          discourse_geo_location: "Geo-Location"
+  js:
+    geo_location:
+      country: "Country"
+      region: "Region"
+      city: "City"
+      select_country: "Select country..."
+      select_region: "Select region..."
+      select_city: "Select city..."
+      location_required: "Please select a country, region, and city."
+      location_label: "Location"
+      filter_topics: "Filter by location"
+      clear_filter: "Clear filter"
+      location_saved: "Location saved."
+      location_display: "%{city}, %{region}, %{country}"
